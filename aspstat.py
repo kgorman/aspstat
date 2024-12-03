@@ -2,10 +2,7 @@ import requests
 import os
 import time
 from requests.auth import HTTPDigestAuth
-import pprint
 import argparse
-import sys
-import signal
 
 ATLAS_USER = os.environ["ATLAS_USER"]
 ATLAS_USER_KEY = os.environ["ATLAS_USER_KEY"]
@@ -44,25 +41,27 @@ def main():
 
     iter = 0 
 
-    header_template = "{:<12} {:<12} {:<12} {:<12}"
-    data_template = "{:<12} {:<12} {:<12} {:<12}"
+    # output formatting, padding
+    header_template = "{:<12} {:<12} {:<12} {:<12} {:<12}"
+    data_template = "{:<12} {:<12} {:<12} {:<12} {:<12}"
 
     while True:
 
         # header row, every 5 outputs
         if iter % 5 == 0:
-            print(header_template.format("IMC", "IMS", "OMS", "OMC"))
-            iter += 1
+            print(header_template.format("PC", "IMC", "IMS", "OMS", "OMC"))
+        iter += 1
 
         # data rows
+        pc = 0
         for processor in get_processors(g, i):
+            pc += 1
             s = get_stats(g, i, processor['name'])
             imc = round((imc+s['stats']['inputMessageCount'])/SECONDS, 0)
             ims = round((ims+s['stats']['inputMessageSize'])/SECONDS, 0)
             oms = round((oms+s['stats']['outputMessageSize'])/SECONDS, 0)
             omc = round((omc+s['stats']['outputMessageCount'])/SECONDS, 0)
-        print(data_template.format(imc, ims, oms, omc))
-
+        print(data_template.format(pc, imc, ims, oms, omc))
         time.sleep(SECONDS)
 
 if __name__ == "__main__":
