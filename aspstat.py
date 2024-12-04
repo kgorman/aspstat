@@ -3,6 +3,7 @@ import os
 import time
 from requests.auth import HTTPDigestAuth
 import argparse
+import pprint
 
 ATLAS_USER = os.environ["ATLAS_USER"]
 ATLAS_USER_KEY = os.environ["ATLAS_USER_KEY"]
@@ -38,21 +39,24 @@ def main():
     ims = 0
     omc = 0
     oms = 0
+    dlq = 0     # dlq count
+    ss = 0      # state size
+    fc = 0
 
     iter = 0 
 
     # output formatting, padding
-    header_template = "{:<12} {:<12} {:<12} {:<12} {:<12}"
-    data_template = "{:<12} {:<12} {:<12} {:<12} {:<12}"
+    header_template = "{:<4} {:<4} {:<12} {:<12} {:<12} {:<12} {:<12} {:<12}"
+    data_template = "{:<4} {:<4} {:<12} {:<12} {:<12} {:<12} {:<12} {:<12}"
 
     while True:
 
         # header row, every 5 outputs
-        if iter % 5 == 0:
-            print(header_template.format("PC", "IMC", "IMS", "OMS", "OMC"))
+        if iter % 10 == 0:
+            print(header_template.format("Proc", "Fail", "Input Count", "Input Size", "Output Count", "Output Size", "DLQ", "State Size"))
         iter += 1
 
-        # data rows
+        # data rows, divide by seconds gives per second metrics
         pc = 0
         for processor in get_processors(g, i):
             pc += 1
@@ -61,7 +65,11 @@ def main():
             ims = round((ims+s['stats']['inputMessageSize'])/SECONDS, 0)
             oms = round((oms+s['stats']['outputMessageSize'])/SECONDS, 0)
             omc = round((omc+s['stats']['outputMessageCount'])/SECONDS, 0)
-        print(data_template.format(pc, imc, ims, oms, omc))
+            dlq = round((dlq+s['stats']['dlqMessageCount'])/SECONDS, 0)
+            ss = round((ss+s['stats']['stateSize'])/SECONDS, 0)
+            if s['state'] != 'STARTED':
+                fc += 1
+        print(data_template.format(pc, fc, imc, ims, omc, oms, dlq, ss))
         time.sleep(SECONDS)
 
 if __name__ == "__main__":
