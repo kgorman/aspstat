@@ -44,17 +44,17 @@ Proc Fail Input Count  Input Size   Output Count Output Size  DLQ    State Size 
 - **fail**
     - Number of Stream Processors in "Failed" state
 - **Input Count**
-    - inputMessageCount of all Started and Failed Stream Processors
+    - per second inputMessageCount of all Started and Failed Stream Processors
 - **Input Size**
-    - inputMessageSize in bytes of all Started and Failed Stream Processors
+    - per second inputMessageSize in bytes of all Started and Failed Stream Processors
 - **Output Count**
-    - outputMessageCount of all Started and Failed Stream Processors
+    -per second outputMessageCount of all Started and Failed Stream Processors
 - **Output Size**
-    - outputMessageSize in bytes of all Started and Failed Stream Processors
+    - per second outputMessageSize in bytes of all Started and Failed Stream Processors
 -  **DLQ**
-    - dlqMessageCount of all Started and Failed Stream Processors
+    - per second dlqMessageCount of all Started and Failed Stream Processors
 - **State Size**
-    - The number of bytes used by windows to store processor state
+    - per second number of bytes used by windows to store processor state
 - **opTime**
     - The 5 moving minute average events take to be processed in milliseconds
 - **kIdle**
