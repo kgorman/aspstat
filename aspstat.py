@@ -41,20 +41,22 @@ def main():
     oms = 0
     dlq = 0     # dlq count
     ss = 0      # state size
-    fc = 0
-    optime = 0
+    fc = 0      # failed count
+    optime = 0  # sum of all operator times
+    kidle = 0   # kafka idle partitions
+    lag = 0     # kafka lag
 
     iter = 0 
 
     # output formatting, padding
-    header_template = "{:<4} {:<4} {:<12} {:<12} {:<12} {:<12} {:<12} {:<12} {:<12}"
-    data_template = "{:<4} {:<4} {:<12} {:<12} {:<12} {:<12} {:<12} {:<12} {:<12}"
+    header_template = "{:<4} {:<4} {:<12} {:<12} {:<12} {:<12} {:<6} {:<12} {:<6} {:<6} {:<6}"
+    data_template = "{:<4} {:<4} {:<12} {:<12} {:<12} {:<12} {:<6} {:<12} {:<6} {:<6} {:<6}"
 
     while True:
 
         # header row, every 5 outputs
         if iter % 10 == 0:
-            print(header_template.format("Proc", "Fail", "Input Count", "Input Size", "Output Count", "Output Size", "DLQ", "State Size", "opTime"))
+            print(header_template.format("Proc", "Fail", "Input Count", "Input Size", "Output Count", "Output Size", "DLQ", "State Size", "opTime", "kIdle", "kLag"))
         iter += 1
 
         # data rows, divide by seconds gives per second metrics
@@ -73,7 +75,14 @@ def main():
                 fc += 1
             for ii in s['stats']['operatorStats']:
                 optime += ii['timeSpentMillis']
-        print(data_template.format(pc, fc, imc, ims, omc, oms, dlq, ss, optime))
+            if 'kafkaPartitions' in s['stats']:
+                for ii in s['stats']['kafkaPartitions']:
+                    if ii['isIdle']:
+                        kidle += 1
+            if 'kafkaTotalOffsetLag' in s:
+                lag = lag+s['stats']['kafkaTotalOffsetLag']
+
+        print(data_template.format(pc, fc, imc, ims, omc, oms, dlq, ss, optime, kidle, lag))
         time.sleep(SECONDS)
 
 if __name__ == "__main__":
