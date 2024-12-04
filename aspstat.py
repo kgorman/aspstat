@@ -42,22 +42,24 @@ def main():
     dlq = 0     # dlq count
     ss = 0      # state size
     fc = 0
+    optime = 0
 
     iter = 0 
 
     # output formatting, padding
-    header_template = "{:<4} {:<4} {:<12} {:<12} {:<12} {:<12} {:<12} {:<12}"
-    data_template = "{:<4} {:<4} {:<12} {:<12} {:<12} {:<12} {:<12} {:<12}"
+    header_template = "{:<4} {:<4} {:<12} {:<12} {:<12} {:<12} {:<12} {:<12} {:<12}"
+    data_template = "{:<4} {:<4} {:<12} {:<12} {:<12} {:<12} {:<12} {:<12} {:<12}"
 
     while True:
 
         # header row, every 5 outputs
         if iter % 10 == 0:
-            print(header_template.format("Proc", "Fail", "Input Count", "Input Size", "Output Count", "Output Size", "DLQ", "State Size"))
+            print(header_template.format("Proc", "Fail", "Input Count", "Input Size", "Output Count", "Output Size", "DLQ", "State Size", "opTime"))
         iter += 1
 
         # data rows, divide by seconds gives per second metrics
         pc = 0
+        optime = 0
         for processor in get_processors(g, i):
             pc += 1
             s = get_stats(g, i, processor['name'])
@@ -67,9 +69,11 @@ def main():
             omc = round((omc+s['stats']['outputMessageCount'])/SECONDS, 0)
             dlq = round((dlq+s['stats']['dlqMessageCount'])/SECONDS, 0)
             ss = round((ss+s['stats']['stateSize'])/SECONDS, 0)
-            if s['state'] != 'STARTED':
+            if s['state'] == 'FAILED':
                 fc += 1
-        print(data_template.format(pc, fc, imc, ims, omc, oms, dlq, ss))
+            for ii in s['stats']['operatorStats']:
+                optime += ii['timeSpentMillis']
+        print(data_template.format(pc, fc, imc, ims, omc, oms, dlq, ss, optime))
         time.sleep(SECONDS)
 
 if __name__ == "__main__":
