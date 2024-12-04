@@ -38,3 +38,27 @@ Proc Fail Input Count  Input Size   Output Count Output Size  DLQ    State Size 
 ```
 
 
+## Metric Definitions
+- **proc**
+    - Number of Stream Processors in "Started" state
+- **fail**
+    - Number of Stream Processors in "Failed" state
+- **Input Count**
+    - inputMessageCount of all Started and Failed Stream Processors
+- **Input Size**
+    - inputMessageSize in bytes of all Started and Failed Stream Processors
+- **Output Count**
+    - outputMessageCount of all Started and Failed Stream Processors
+- **Output Size**
+    - outputMessageSize in bytes of all Started and Failed Stream Processors
+-  **DLQ**
+    - dlqMessageCount of all Started and Failed Stream Processors
+- **State Size**
+    - The number of bytes used by windows to store processor state
+- **opTime**
+    - The 5 moving minute average events take to be processed in milliseconds
+- **kIdle**
+    - The number of Kafka Partitions being read by processors that are Idle
+- **kLag**
+    - The total consumer lag for processors using Kafka Sources
+
