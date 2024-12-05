@@ -48,7 +48,7 @@ Proc Fail Input Count  Input Size   Output Count Output Size  DLQ    State Size 
 - **Input Size**
     - per second inputMessageSize in bytes of all Started and Failed Stream Processors
 - **Output Count**
-    -per second outputMessageCount of all Started and Failed Stream Processors
+    - per second outputMessageCount of all Started and Failed Stream Processors
 - **Output Size**
     - per second outputMessageSize in bytes of all Started and Failed Stream Processors
 -  **DLQ**
