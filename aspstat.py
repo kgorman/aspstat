@@ -15,17 +15,34 @@ HEADERS = {
 AUTH = HTTPDigestAuth(ATLAS_USER, ATLAS_USER_KEY)
 SECONDS = 5
 
+
 def get_stats(group, instance, processor):
-    """ get stats for an stream processor """
-    url = "groups/{}/streams/{}/processor/{}".format(group, instance, processor)
-    response = requests.get(BASE_URL+url, auth=AUTH, headers=HEADERS)
-    return response.json()
+    """Get stats for a stream processor."""
+    url = "groups/{}/streams/{}/processor/{}".format(
+        group, instance, processor)
+    try:
+        response = requests.get(BASE_URL + url, auth=AUTH, headers=HEADERS)
+        response.raise_for_status()  # Raise an HTTPError for bad responses
+        return response.json()
+    except requests.exceptions.RequestException as e:
+        print(f"Error fetching stats: {e}")
+        return None
+
 
 def get_processors(group, instance):
-    """ get all processors for the instance """
+    """Get all processors for the instance."""
     url = "groups/{}/streams/{}/processors".format(group, instance)
-    response = requests.get(BASE_URL+url, auth=AUTH, headers=HEADERS)
-    return response.json()['results']
+    try:
+        response = requests.get(BASE_URL + url, auth=AUTH, headers=HEADERS)
+        response.raise_for_status()  # Raise an HTTPError for bad responses
+        data = response.json()
+        if 'results' in data:
+            return data['results']
+        else:
+            return []
+    except requests.exceptions.RequestException as e:
+        print(f"Error fetching processors: {e}")
+        return []
 
 def main():
     parser = argparse.ArgumentParser(description='Process some integers.')
@@ -45,8 +62,7 @@ def main():
     optime = 0  # sum of all operator times
     kidle = 0   # kafka idle partitions
     lag = 0     # kafka lag
-
-    iter = 0 
+    iter = 0
 
     # output formatting, padding
     header_template = "{:<4} {:<4} {:<12} {:<12} {:<12} {:<12} {:<6} {:<12} {:<6} {:<6} {:<6}"
@@ -54,23 +70,34 @@ def main():
 
     while True:
 
-        # header row, every 5 outputs
-        if iter % 10 == 0:
-            print(header_template.format("Proc", "Fail", "Input Count", "Input Size", "Output Count", "Output Size", "DLQ", "State Size", "opTime", "kIdle", "kLag"))
-        iter += 1
-
-        # data rows, divide by seconds gives per second metrics
         pc = 0
         optime = 0
+        Pimc = imc
+        imc = 0
+        Pims = ims
+        ims = 0
+        Pomc = omc
+        omc = 0
+        Poms = oms
+        oms = 0
+        Pss = ss
+        ss = 0
+
         for processor in get_processors(g, i):
-            pc += 1
+            # get the stats for the processor
             s = get_stats(g, i, processor['name'])
-            imc = round((imc+s['stats']['inputMessageCount'])/SECONDS, 0)
-            ims = round((ims+s['stats']['inputMessageSize'])/SECONDS, 0)
-            oms = round((oms+s['stats']['outputMessageSize'])/SECONDS, 0)
-            omc = round((omc+s['stats']['outputMessageCount'])/SECONDS, 0)
-            dlq = round((dlq+s['stats']['dlqMessageCount'])/SECONDS, 0)
-            ss = round((ss+s['stats']['stateSize'])/SECONDS, 0)
+            
+            # compute stats that are cumulative and return per second
+            imc = imc+s['stats']['inputMessageCount']
+            ims = ims+s['stats']['inputMessageSize']
+            oms = oms+s['stats']['outputMessageSize']
+            omc = omc+s['stats']['outputMessageCount']
+            dlq = dlq+s['stats']['dlqMessageCount']
+            ss = ss+s['stats']['stateSize']
+
+            # all other stats
+            if s['state'] == 'STARTED':
+                pc += 1
             if s['state'] == 'FAILED':
                 fc += 1
             for ii in s['stats']['operatorStats']:
@@ -82,7 +109,13 @@ def main():
             if 'kafkaTotalOffsetLag' in s:
                 lag = lag+s['stats']['kafkaTotalOffsetLag']
 
-        print(data_template.format(pc, fc, imc, ims, omc, oms, dlq, ss, optime, kidle, lag))
+        # header row, every 5 outputs
+        if iter % 10 == 0:
+            print(header_template.format("Proc", "Fail", "Input Count", "Input Size",
+                  "Output Count", "Output Size", "DLQ", "State Size", "opTime", "kIdle", "kLag"))
+        if iter != 0: 
+            print(data_template.format(pc, fc, int(imc-Pimc), int(ims-Pims), int(omc-Pomc), int(oms-Poms), dlq, int(ss-Pss), optime, kidle, lag))
+        iter += 1
         time.sleep(SECONDS)
 
 if __name__ == "__main__":
