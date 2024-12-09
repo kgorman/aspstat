@@ -15,7 +15,6 @@ HEADERS = {
 AUTH = HTTPDigestAuth(ATLAS_USER, ATLAS_USER_KEY)
 SECONDS = 5
 
-
 def get_stats(group, instance, processor):
     """Get stats for a stream processor."""
     url = "groups/{}/streams/{}/processor/{}".format(
@@ -27,7 +26,6 @@ def get_stats(group, instance, processor):
     except requests.exceptions.RequestException as e:
         print(f"Error fetching stats: {e}")
         return None
-
 
 def get_processors(group, instance):
     """Get all processors for the instance."""
